@@ -3,6 +3,7 @@ from typing import List
 from constants import Constants
 from regex_generator import Rules
 from renderer import WordCompare, Renderer
+from smart_guesser import SmartGuesser
 
 
 MAX_GUESSES = 6
@@ -29,13 +30,14 @@ class Solver:
             v for k, v in self.constants.answers.items() if str(k) < str(self.constants.today)
         )
 
-    def play(self):
+    def play(self) -> int:
         self.initial_guess()
         while not self.is_solved() and len(self.guesses) < MAX_GUESSES:
-            new_guesses = self.find_next_guesses()
-            self.guess(new_guesses)
+            sg = SmartGuesser(self._rules, self.find_next_guesses(), 5).find_best_guess()
+            self._make_guess(sg)
         renderer = Renderer(self.constants, [x.comparison for x in self.guesses])
         print(renderer.render())
+        return len(self.guesses) if self.is_solved() else 10
 
     def _make_guess(self, word: str) -> WordCompare:
         print(f"guessing {word}")
@@ -43,7 +45,7 @@ class Solver:
         self.guesses.append(guess)
         self._rules.ingest_comparison(guess.comparison)
 
-    def initial_guess(self):
+    def initial_guess(self) -> None:
         self._make_guess(self.seed_words[0])
 
     def guess(self, guess_set: set) -> None:
