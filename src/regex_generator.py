@@ -11,8 +11,14 @@ class Rules:
         self.right_indexes: Dict[int, set] = dict()
         self.wrong_indexes: dict = dict()
         self.must_haves: set = set()
+        self.preferred_letters: set = set()
 
     def generate_regex(self) -> str:
+        if self.preferred_letters:
+            return "".join([
+                f"[{''.join(self.preferred_letters)}]"
+                for x in range(self.letter_count)
+            ])
         return "".join([
             f"[{''.join(self._generate_index_char_set(x))}]"
             for x in range(self.letter_count)

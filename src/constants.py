@@ -5,9 +5,10 @@ from answers import ANSWERS
 from possibles import POSSIBLE_ANSWERS
 
 
+MAX_GUESSES = 6
 STARTING_DATE = date(2021, 6, 19)  # date wordle started
 TODAY = date.today()
-# TODAY = date(2022, 1, 1)
+# TODAY = date(2022, 3, 16)
 ALPHA = {
     "a",
     "b",
