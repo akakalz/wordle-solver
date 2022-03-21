@@ -1,6 +1,5 @@
 from answers import ANSWERS
-from constants import ALPHA, VOWELS
-from regex_generator import Rules
+from constants import ALPHA
 from collections import Counter
 import json
 

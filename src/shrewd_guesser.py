@@ -2,7 +2,7 @@ from copy import deepcopy
 import re
 from typing import Set
 from regex_generator import Rules
-from constants import ALPHA, VOWELS, POSSIBLE_ANSWERS
+from constants import VOWELS, POSSIBLE_ANSWERS
 from abstracts.guesser import Guesser
 from research.findings import letter_counts_in_answers
 from collections import Counter
@@ -27,7 +27,7 @@ class ShrewdGuesser(Guesser):
             shrewd_guess = self.exploratory_guess()
         elif action == CourseOfAction.TARGETED_LETTERS_GUESS:
             shrewd_guess = self.targeted_letters_guess()
-        if not shrewd_guess:
+        if not shrewd_guess:  # in case there was an error generating a guess
             shrewd_guess = self.random_guess()
         return shrewd_guess
 
@@ -43,10 +43,10 @@ class ShrewdGuesser(Guesser):
     def get_possible_guesses(self, rules: Rules) -> Set:
         pttrn = re.compile(rules.generate_regex())
         return {
-            x for x in POSSIBLE_ANSWERS
+            poss_answer for poss_answer in POSSIBLE_ANSWERS
             if all([
-                pttrn.match(x) and x not in self.prior_guesses,
-                all([l in x for l in rules.must_haves])
+                pttrn.match(poss_answer) and poss_answer not in self.prior_guesses,
+                all([must_have in poss_answer for must_have in rules.must_haves])
             ])
         }
 
@@ -76,7 +76,7 @@ class ShrewdGuesser(Guesser):
     def determine_course_of_action(self) -> int:
         if not self.prior_guesses:
             return CourseOfAction.SEED_GUESS
-        elif len(self.prior_guesses) < 3 and (len(self.rules.right_indexes) + len(self.rules.wrong_indexes)) < 3:
+        elif len(self.prior_guesses) == 1 and (len(self.rules.right_indexes) + len(self.rules.wrong_indexes)) < 3:
             return CourseOfAction.EXPLORATORY_GUESS
         elif all([
             len(self.rules.right_indexes) in {3, 4},
@@ -109,22 +109,13 @@ class ShrewdGuesser(Guesser):
             if all([v == 1 for v in Counter(x).values()])
         }.pop()
 
-    def get_top_x_chars(self, x: int, excludes: Set) -> Set:
-        return set(
-            [
-                l for l in letter_counts_in_answers if all([
-                    l not in excludes
-                ])
-            ][:x]
-        )
-
     def targeted_letters_guess(self) -> str:
         print("targeted letters guess")
         min_letters = 5
         possibles = set()
         while True:
             must_have_letters = self.get_top_x_chars(min_letters, self.rules.dead_letters.union(self.rules.must_haves))
-            if not self.check_if_vowels_present(must_have_letters):
+            if not self.vowels_present(must_have_letters):
                 must_have_letters.union({"e"})
             temp_rules = Rules()
             temp_rules.preferred_letters = must_have_letters
@@ -142,5 +133,14 @@ class ShrewdGuesser(Guesser):
             return possibles.pop()
         return None
 
-    def check_if_vowels_present(self, letters: Set) -> bool:
+    def get_top_x_chars(self, x: int, excludes: Set) -> Set:
+        return set(
+            [
+                letter for letter in letter_counts_in_answers if all([
+                    letter not in excludes
+                ])
+            ][:x]
+        )
+
+    def vowels_present(self, letters: Set) -> bool:
         return any([x in VOWELS for x in letters])

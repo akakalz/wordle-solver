@@ -1,23 +1,13 @@
-import re
+# import re
 from typing import List
 from constants import Constants, MAX_GUESSES
 from regex_generator import Rules
 from renderer import WordCompare, Renderer
-from smart_guesser import SmartGuesser
+# from smart_guesser import SmartGuesser
 from shrewd_guesser import ShrewdGuesser
 
 
 class Solver:
-    seed_words: list = [
-        "clear",
-        "point",
-        "posit",
-        "crane",
-        "riots",
-        "slate",
-        "crate",
-    ]
-
     def __init__(self, constants: Constants) -> None:
         self.constants = constants
 
@@ -41,20 +31,6 @@ class Solver:
         guess = WordCompare(word, self._answer)
         self.guesses.append(guess)
         self._rules.ingest_comparison(guess.comparison)
-
-    def initial_guess(self) -> None:
-        self._make_guess(self.seed_words[0])
-
-    def guess(self, guess_set: set) -> None:
-        new_word = guess_set.pop()
-        self._make_guess(new_word)
-
-    def find_next_guesses(self) -> set:
-        regex = re.compile(self._rules.generate_regex())
-        possibles = {
-            x for x in self.constants.possibles if regex.match(x) and all([y in x for y in self._rules.must_haves])
-        }
-        return possibles - self.prior_answers
 
     def is_solved(self) -> bool:
         if not self.guesses:
