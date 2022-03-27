@@ -2,7 +2,6 @@ from copy import deepcopy
 import re
 from typing import Set
 from regex_generator import Rules
-from constants import VOWELS, POSSIBLE_ANSWERS
 from abstracts.guesser import Guesser
 from research.findings import letter_counts_in_answers
 from collections import Counter
@@ -43,7 +42,7 @@ class ShrewdGuesser(Guesser):
     def get_possible_guesses(self, rules: Rules) -> Set:
         pttrn = re.compile(rules.generate_regex())
         return {
-            poss_answer for poss_answer in POSSIBLE_ANSWERS
+            poss_answer for poss_answer in self.constants.possibles
             if all([
                 pttrn.match(poss_answer) and poss_answer not in self.prior_guesses,
                 all([must_have in poss_answer for must_have in rules.must_haves])
@@ -80,7 +79,7 @@ class ShrewdGuesser(Guesser):
             return CourseOfAction.EXPLORATORY_GUESS
         elif all([
             len(self.rules.right_indexes) in {3, 4},
-            len(self.get_current_possible_guesses()) > (self.max_guesses - len(self.prior_guesses)),
+            len(self.get_current_possible_guesses()) > (self.constants.max_guesses - len(self.prior_guesses)),
         ]):
             return CourseOfAction.TARGETED_LETTERS_GUESS
         return CourseOfAction.RANDOM_GUESS  # if all else fails, go rando!
@@ -143,4 +142,4 @@ class ShrewdGuesser(Guesser):
         )
 
     def vowels_present(self, letters: Set) -> bool:
-        return any([x in VOWELS for x in letters])
+        return any([x in self.constants.vowels for x in letters])

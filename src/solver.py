@@ -20,8 +20,8 @@ class Solver:
 
     def play(self) -> int:
         while not self.is_solved() and len(self.guesses) < MAX_GUESSES:
-            sg = ShrewdGuesser(self._rules, self.guesses)
-            self._make_guess(sg.guess())
+            guesser = ShrewdGuesser(self._rules, self.constants, self.guesses)
+            self._make_guess(guesser.guess())
         renderer = Renderer(self.constants, [x.comparison for x in self.guesses])
         print(renderer.render())
         return len(self.guesses) if self.is_solved() else 10
