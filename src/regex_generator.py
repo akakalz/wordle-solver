@@ -17,7 +17,7 @@ class Rules:
         if self.preferred_letters:
             return "".join([
                 f"[{''.join(self.preferred_letters)}]"
-                for x in range(self.letter_count)
+                for _ in range(self.letter_count)
             ])
         return "".join([
             f"[{''.join(self._generate_index_char_set(x))}]"

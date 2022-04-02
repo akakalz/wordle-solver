@@ -4,7 +4,9 @@ from typing import Set
 from regex_generator import Rules
 from abstracts.guesser import Guesser
 from research.findings import letter_counts_in_answers
+from research.super_similar_words import SuperSimilar
 from collections import Counter
+from constants import Constants
 
 
 class CourseOfAction:
@@ -12,9 +14,16 @@ class CourseOfAction:
     RANDOM_GUESS: int = 1
     EXPLORATORY_GUESS: int = 2
     TARGETED_LETTERS_GUESS: int = 3
+    LAST_WORD_STANDING: int = 4
 
 
 class ShrewdGuesser(Guesser):
+
+    def __init__(self, rules: Rules, constants: Constants, prior_guesses: list) -> None:
+        super().__init__(rules, constants, prior_guesses)
+        self.possibles = self.get_current_possible_guesses()
+        self.ssw = SuperSimilar(self.possibles)
+        self.guesses_left = 5 - len(prior_guesses)
 
     def guess(self) -> str:
         action = self.determine_course_of_action()
@@ -26,6 +35,8 @@ class ShrewdGuesser(Guesser):
             shrewd_guess = self.exploratory_guess()
         elif action == CourseOfAction.TARGETED_LETTERS_GUESS:
             shrewd_guess = self.targeted_letters_guess()
+        elif action == CourseOfAction.LAST_WORD_STANDING:
+            shrewd_guess = self.solve_guess()
         if not shrewd_guess:  # in case there was an error generating a guess
             shrewd_guess = self.random_guess()
         return shrewd_guess
@@ -73,15 +84,25 @@ class ShrewdGuesser(Guesser):
         return temp_rules
 
     def determine_course_of_action(self) -> int:
+        if len(self.possibles) == 1:
+            return CourseOfAction.LAST_WORD_STANDING
+        super_sim_words = self.ssw.has_super_similar()
+        if super_sim_words:
+            print("I've determined that most of the guesses left have super similar structure")
+            print(self.ssw.words)
+            print(f"I'm recommending these letters to try {self.ssw.recommendations}")
         if not self.prior_guesses:
             return CourseOfAction.SEED_GUESS
         elif len(self.prior_guesses) == 1 and (len(self.rules.right_indexes) + len(self.rules.wrong_indexes)) < 3:
             return CourseOfAction.EXPLORATORY_GUESS
-        elif all([
-            len(self.rules.right_indexes) in {3, 4},
-            len(self.get_current_possible_guesses()) > (self.constants.max_guesses - len(self.prior_guesses)),
-        ]):
+        elif super_sim_words and self.guesses_left < len(self.possibles):
             return CourseOfAction.TARGETED_LETTERS_GUESS
+        elif super_sim_words:
+            print(
+                f"but given that I have {self.guesses_left} guesses left and {len(self.possibles)} choices, "
+                "I will guess at random."
+            )
+            return CourseOfAction.RANDOM_GUESS
         return CourseOfAction.RANDOM_GUESS  # if all else fails, go rando!
 
     def seed_guess(self) -> str:
@@ -93,7 +114,7 @@ class ShrewdGuesser(Guesser):
         given a rules set, select a guess from the possible set at random
         """
         print("random guess")
-        return self.get_current_possible_guesses().pop()
+        return self.possibles.pop()
 
     def exploratory_guess(self) -> str:
         """
@@ -108,29 +129,21 @@ class ShrewdGuesser(Guesser):
             if all([v == 1 for v in Counter(x).values()])
         }.pop()
 
+    def solve_guess(self):
+        print("well there's only one word left, let's solve this puzzle!")
+        return self.possibles.pop()
+
     def targeted_letters_guess(self) -> str:
         print("targeted letters guess")
-        min_letters = 5
-        possibles = set()
-        while True:
-            must_have_letters = self.get_top_x_chars(min_letters, self.rules.dead_letters.union(self.rules.must_haves))
-            if not self.vowels_present(must_have_letters):
-                must_have_letters.union({"e"})
-            temp_rules = Rules()
-            temp_rules.preferred_letters = must_have_letters
-            possibles = {
-                x for x in self.get_possible_guesses(temp_rules)
-                if all([v == 1 for v in Counter(x).values()])
-            }
-
-            if possibles:
-                break
-            if min_letters > 26:
-                break
-            min_letters += 1
-        if possibles:
-            return possibles.pop()
-        return None
+        guess = self.get_valid_word_with_most_letters_from_set(self.ssw.recommendations)
+        if guess is None:
+            print(
+                "After considering all the possibilities of a targeted letters "
+                "guess, I came up with nothing.. I'll guess a random word "
+                "from my possibles."
+            )
+            self.random_guess()  # if all else fails...
+        return guess
 
     def get_top_x_chars(self, x: int, excludes: Set) -> Set:
         return set(
@@ -143,3 +156,15 @@ class ShrewdGuesser(Guesser):
 
     def vowels_present(self, letters: Set) -> bool:
         return any([x in self.constants.vowels for x in letters])
+
+    def get_valid_word_with_most_letters_from_set(self, letter_set: set) -> str:
+        return_word = None
+        most_letters_from_set = 0
+        for word in self.constants.valids:
+            letters_in_set = sum([1 for c in letter_set if c in word])
+            if letters_in_set > most_letters_from_set:
+                most_letters_from_set = letters_in_set
+                return_word = word
+            if most_letters_from_set in {5, len(letter_set)}:
+                break  # no need to continue
+        return return_word

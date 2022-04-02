@@ -1,5 +1,5 @@
 from answers import ANSWERS
-from constants import ALPHA
+from constants import ALPHA, Constants
 from collections import Counter
 import json
 
@@ -105,5 +105,16 @@ def main() -> None:
     """
 
 
+def main_2():
+    c = Constants()
+    # for k, v in c.answers.items():
+    #     if v == "store":
+    #         print(v, k)
+    #         break
+    for k, v in c.answers.items():
+        if k < str(c.today):
+            print(v, k)
+
+
 if __name__ == "__main__":
-    main()
+    main_2()

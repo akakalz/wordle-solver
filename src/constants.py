@@ -3,13 +3,15 @@ from datetime import date, timedelta
 
 from answers import ANSWERS
 from possibles import POSSIBLE_ANSWERS
+from valids import VALIDS
 
 
 MAX_GUESSES = 6
 
 STARTING_DATE = date(2021, 6, 19)  # date wordle started
-TODAY = date.today()
-# TODAY = date(2022, 3, 26)
+TODAY = date.today() + timedelta(days=1)
+# `harry` day was skipped, so adding a day
+TODAY = date(2022, 3, 26)
 ALPHA = {
     "a",
     "b",
@@ -55,8 +57,10 @@ PREVIOUS_ANSWERS: set = {
 
 class Constants:
     answers: dict = DATED_ANSWERS
+    alphas: set = ALPHA
     previous_answers: set = PREVIOUS_ANSWERS
     possibles: set = POSSIBLE_ANSWERS - PREVIOUS_ANSWERS
+    valids: set = VALIDS
     today: date = TODAY
     start_date: date = STARTING_DATE
     vowels: set = VOWELS
