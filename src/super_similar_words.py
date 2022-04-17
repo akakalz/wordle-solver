@@ -8,7 +8,7 @@ class SuperSimilar:
     def __init__(self, words: set) -> None:
         self.words = words
 
-        self.counts = self.get_letter_counts()
+        self.counts = self.get_word_sizes()
         self.two_thirds = 0.66 * len(self.words)
         self._recommendations: set = None
 
@@ -43,7 +43,7 @@ class SuperSimilar:
             return True
         return False
 
-    def get_letter_counts(self) -> dict:
+    def get_word_sizes(self) -> dict:
         counts = {}
         for word in self.words:
             c = Counter(word)

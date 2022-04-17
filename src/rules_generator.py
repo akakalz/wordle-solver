@@ -1,3 +1,4 @@
+from calendar import c
 from typing import Dict
 from renderer import Evaluation, WordleComparison
 from constants import ALPHA
@@ -45,25 +46,32 @@ class Rules:
     def _generate_char_set_for_index(self, idx: int) -> set:
         return ALPHA - self.dead_letters - set(self.wrong_indexes.get(idx, set()))
 
-    def ingest_comparison(self, comparison: Dict[int, WordleComparison]) -> None:
-        for idx, cmp in comparison.items():
+    def _update_letter_counts(self, comparisons: Dict[int, WordleComparison]) -> None:
+        new_dict = {}
+        for v in comparisons.values():
+            if v.evaluation in {Evaluation.correct, Evaluation.present}:
+                if v.letter not in new_dict:
+                    new_dict[v.letter] = 0
+                new_dict[v.letter] += 1
+                self.letter_counts[v.letter] = max(new_dict[v.letter], self.letter_counts.get(v.letter, 0))
+
+    def _update_indexes(self, comparisons: Dict[int, WordleComparison]) -> None:
+        for idx, cmp in comparisons.items():
             if cmp.evaluation == Evaluation.correct:
                 self.right_indexes[idx] = cmp.letter
                 self.must_haves.add(cmp.letter)
-                if cmp.letter not in self.letter_counts:
-                    self.letter_counts[cmp.letter] = 0
-                self.letter_counts[cmp.letter] += 1
             elif cmp.evaluation == Evaluation.present:
                 if idx not in self.wrong_indexes:
                     self.wrong_indexes[idx] = set()
                 self.wrong_indexes[idx].add(cmp.letter)
                 self.must_haves.add(cmp.letter)
-                if cmp.letter not in self.letter_counts:
-                    self.letter_counts[cmp.letter] = 0
-                self.letter_counts[cmp.letter] += 1
-            elif cmp.evaluation == Evaluation.absent and cmp.letter in self.must_haves:
+            elif cmp.evaluation == Evaluation.absent and (cmp.letter in self.must_haves or cmp.letter in self.letter_counts):
                 if idx not in self.wrong_indexes:
                     self.wrong_indexes[idx] = set()
                 self.wrong_indexes[idx].add(cmp.letter)
             else:
                 self.dead_letters.add(cmp.letter)
+
+    def ingest_comparisons(self, comparisons: Dict[int, WordleComparison]) -> None:
+        self._update_letter_counts(comparisons)
+        self._update_indexes(comparisons)

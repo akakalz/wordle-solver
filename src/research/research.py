@@ -3,24 +3,24 @@ from constants import ALPHA, Constants
 from collections import Counter
 
 # from shrewd_guesser import ShrewdGuesser
-# from regex_generator import Rules
+# from rules_generator import Rules
 
 import json
 
 
 def main() -> None:
-    letter_counts = {
+    word_sizes = {
         x: 0 for x in ALPHA
     }
     for answer in ANSWERS:
         cntr = Counter(answer)
         for k, v in cntr.items():
-            letter_counts[k] += v
+            word_sizes[k] += v
 
     top_10 = sorted(
         [
             (k, v)
-            for k, v in letter_counts.items()
+            for k, v in word_sizes.items()
         ],
         key=lambda x: x[1],
         reverse=True,
@@ -39,7 +39,7 @@ def main() -> None:
     #   ('n', 573),
     #   ('c', 475),
     # ]
-    print(json.dumps(letter_counts))
+    print(json.dumps(word_sizes))
     """
     {
         "e": 1230,

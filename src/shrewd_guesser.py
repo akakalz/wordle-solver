@@ -1,9 +1,9 @@
 from copy import deepcopy
 import re
 from typing import Set
-from regex_generator import Rules
+from rules_generator import Rules
 from abstracts.guesser import Guesser
-from research.findings import letter_counts_in_answers, word_counts_per_letter
+from research.findings import word_sizes_in_answers, word_counts_per_letter
 from super_similar_words import SuperSimilar
 from collections import Counter
 from constants import Constants
@@ -27,8 +27,9 @@ class ShrewdGuesser(Guesser):
 
         if len(self.possibles) <= 10:
             print(self.possibles)
-        if not self.possibles:
-            print(self.rules)
+        else:
+            print(f"{len(self.possibles)} possible words")
+        print(rules)
 
     def guess(self) -> str:
         action = self.determine_course_of_action()
@@ -115,7 +116,6 @@ class ShrewdGuesser(Guesser):
         temp_rules.wrong_indexes = {}
         temp_rules.preferred_letters = self.get_top_x_chars(min_count, new_dead_letters)
         temp_rules.dead_letters = new_dead_letters
-        print(temp_rules)
         temp_rules.letter_counts = {
             x: 1
             for x in temp_rules.preferred_letters
@@ -199,7 +199,7 @@ class ShrewdGuesser(Guesser):
     def get_top_x_chars(self, x: int, excludes: Set) -> Set:
         return set(
             [
-                letter for letter in letter_counts_in_answers if all([
+                letter for letter in word_sizes_in_answers if all([
                     letter not in excludes
                 ])
             ][:x]

@@ -1,4 +1,4 @@
-from regex_generator import Rules
+from rules_generator import Rules
 from renderer import Comparison
 import pytest
 
@@ -29,11 +29,11 @@ import pytest
         ),
     ]
 )
-def test_ingest_comparison(comparison, dead_letters, right_indexes, wrong_indexes, must_haves):
+def test_ingest_comparisons(comparison, dead_letters, right_indexes, wrong_indexes, must_haves):
     # arrange
     test_rule = Rules()
     # act
-    test_rule.ingest_comparison(comparison)
+    test_rule.ingest_comparisons(comparison)
     # assert
     assert test_rule.dead_letters == dead_letters
     assert test_rule.right_indexes == right_indexes

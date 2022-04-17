@@ -1,4 +1,4 @@
-letter_counts_in_answers = {
+word_sizes_in_answers = {
     "e": 1230,
     "a": 975,
     "r": 897,

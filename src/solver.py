@@ -3,7 +3,7 @@
 from datetime import date, timedelta
 from typing import List
 from constants import Constants, MAX_GUESSES
-from regex_generator import Rules
+from rules_generator import Rules
 # from renderer import WordCompare, Renderer
 from renderer import Evaluation, WordleCompare, WordleRenderer
 # from smart_guesser import SmartGuesser
@@ -13,6 +13,8 @@ from shrewd_guesser import ShrewdGuesser
 class Solver:
     def __init__(self, constants: Constants) -> None:
         self.constants = constants
+        if self.constants.today > date.today():
+            raise ValueError("it's not the future yet!")
         # `harry` day was skipped, so adding a day
         if self.constants.today >= date(2022, 3, 30):
             self._answer = self.constants.answers.get(str(self.constants.today + timedelta(days=1)))
@@ -37,7 +39,7 @@ class Solver:
         # logger.opt(colors=True).info(f"guessing <green>{word}</green>")
         guess = WordleCompare(word, self._answer)
         self.guesses.append(guess)
-        self._rules.ingest_comparison(guess.comparison)
+        self._rules.ingest_comparisons(guess.comparison)
 
     def is_solved(self) -> bool:
         if not self.guesses:
