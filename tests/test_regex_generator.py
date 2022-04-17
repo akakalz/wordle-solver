@@ -7,21 +7,21 @@ import pytest
     "comparison,dead_letters,right_indexes,wrong_indexes,must_haves",
     [
         (
-            {0: Comparison("a", False, False), 1: Comparison("b", False, False), 2: Comparison("c", False, False), 3: Comparison("d", False, False), 4: Comparison("e", False, False)},
+            {0: Comparison("a", False, False, False, 0), 1: Comparison("b", False, False, False, 0), 2: Comparison("c", False, False, False, 0), 3: Comparison("d", False, False, False, 0), 4: Comparison("e", False, False, False, 0)},
             {"a","b","c","d","e"},
             {},
             {},
             set(),
         ),
         (
-            {0: Comparison("a", True, False), 1: Comparison("b", False, False), 2: Comparison("c", False, False), 3: Comparison("d", False, False), 4: Comparison("e", False, False)},
+            {0: Comparison("a", True, False, False, 1), 1: Comparison("b", False, False, False, 0), 2: Comparison("c", False, False, False, 0), 3: Comparison("d", False, False, False, 0), 4: Comparison("e", False, False, False, 0)},
             {"b","c","d","e"},
             {},
             {0: {"a"}},
             {"a"},
         ),
         (
-            {0: Comparison("a", True, False), 1: Comparison("b", True, True), 2: Comparison("c", False, False), 3: Comparison("d", False, False), 4: Comparison("e", False, False)},
+            {0: Comparison("a", True, False, False, 1), 1: Comparison("b", True, True, False, 1), 2: Comparison("c", False, False, False, 0), 3: Comparison("d", False, False, False, 0), 4: Comparison("e", False, False, False, 0)},
             {"c","d","e"},
             {1: "b"},
             {0: {"a"}},

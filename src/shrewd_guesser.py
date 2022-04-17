@@ -3,8 +3,8 @@ import re
 from typing import Set
 from regex_generator import Rules
 from abstracts.guesser import Guesser
-from research.findings import letter_counts_in_answers
-from research.super_similar_words import SuperSimilar
+from research.findings import letter_counts_in_answers, word_counts_per_letter
+from super_similar_words import SuperSimilar
 from collections import Counter
 from constants import Constants
 
@@ -24,6 +24,11 @@ class ShrewdGuesser(Guesser):
         self.possibles = self.get_current_possible_guesses()
         self.ssw = SuperSimilar(self.possibles)
         self.guesses_left = 5 - len(prior_guesses)
+
+        if len(self.possibles) <= 10:
+            print(self.possibles)
+        if not self.possibles:
+            print(self.rules)
 
     def guess(self) -> str:
         action = self.determine_course_of_action()
@@ -50,7 +55,7 @@ class ShrewdGuesser(Guesser):
     def get_current_possible_guesses(self) -> Set:
         return self.get_possible_guesses(self.rules)
 
-    def get_possible_guesses(self, rules: Rules) -> Set:
+    def get_possible_guesses_orig(self, rules: Rules) -> Set:
         pttrn = re.compile(rules.generate_regex())
         return {
             poss_answer for poss_answer in self.constants.possibles
@@ -59,6 +64,45 @@ class ShrewdGuesser(Guesser):
                 all([must_have in poss_answer for must_have in rules.must_haves])
             ])
         }
+
+    def get_possible_guesses(self, rules: Rules) -> Set:
+        possibles = set()
+        if not rules.letter_counts:
+            return self.constants.possibles
+
+        if rules.preferred_letters:
+            for word in self.constants.possibles:
+                if word in self.prior_guesses:
+                    continue
+                for letter in rules.preferred_letters:
+                    if letter in word:
+                        possibles.add(word)
+                        break
+        else:
+            for word in self.constants.possibles:
+                if word in self.prior_guesses:
+                    continue
+
+                counter = Counter(word)
+                if all([
+                    all([
+                        l in counter and c <= counter[l]
+                        for l, c in rules.letter_counts.items()
+                    ]),
+                    all([x not in word for x in rules.dead_letters]),
+                    all([
+                        x == word[idx]
+                        for idx, letters in rules.right_indexes.items()
+                        for x in letters
+                    ]),
+                    all([
+                        x != word[idx]
+                        for idx, letters in rules.wrong_indexes.items()
+                        for x in letters
+                    ]),
+                ]):
+                    possibles.add(word)
+        return possibles
 
     def generate_exploratory_rules(self) -> Rules:
         min_count = 6
@@ -71,6 +115,11 @@ class ShrewdGuesser(Guesser):
         temp_rules.wrong_indexes = {}
         temp_rules.preferred_letters = self.get_top_x_chars(min_count, new_dead_letters)
         temp_rules.dead_letters = new_dead_letters
+        print(temp_rules)
+        temp_rules.letter_counts = {
+            x: 1
+            for x in temp_rules.preferred_letters
+        }
 
         while True:
             if {
@@ -84,6 +133,8 @@ class ShrewdGuesser(Guesser):
         return temp_rules
 
     def determine_course_of_action(self) -> int:
+        if not self.prior_guesses:
+            return CourseOfAction.SEED_GUESS
         if len(self.possibles) == 1:
             return CourseOfAction.LAST_WORD_STANDING
         super_sim_words = self.ssw.has_super_similar()
@@ -91,11 +142,9 @@ class ShrewdGuesser(Guesser):
             print("I've determined that most of the guesses left have super similar structure")
             print(self.ssw.words)
             print(f"I'm recommending these letters to try {self.ssw.recommendations}")
-        if not self.prior_guesses:
-            return CourseOfAction.SEED_GUESS
-        elif len(self.prior_guesses) == 1 and (len(self.rules.right_indexes) + len(self.rules.wrong_indexes)) < 3:
+        if len(self.prior_guesses) == 1 and (len(self.rules.right_indexes) + len(self.rules.wrong_indexes)) < 3:
             return CourseOfAction.EXPLORATORY_GUESS
-        elif super_sim_words and self.guesses_left < len(self.possibles):
+        elif super_sim_words and self.guesses_left > 1:
             return CourseOfAction.TARGETED_LETTERS_GUESS
         elif super_sim_words:
             print(
@@ -107,7 +156,9 @@ class ShrewdGuesser(Guesser):
 
     def seed_guess(self) -> str:
         print("seed guess")
-        return "orate"
+        word = self.get_potential_answer_with_most_letters_from_set()
+        # return "orate"
+        return word
 
     def random_guess(self) -> str:
         """
@@ -161,6 +212,23 @@ class ShrewdGuesser(Guesser):
         return_word = None
         most_letters_from_set = 0
         for word in self.constants.valids:
+            letters_in_set = sum([1 for c in letter_set if c in word])
+            if letters_in_set > most_letters_from_set:
+                most_letters_from_set = letters_in_set
+                return_word = word
+            if most_letters_from_set in {5, len(letter_set)}:
+                break  # no need to continue
+        return return_word
+
+    def get_potential_answer_with_most_letters_from_set(self) -> str:
+        return_word = None
+        most_letters_from_set = 0
+        letter_set = {
+            x
+            for i, x in enumerate(word_counts_per_letter)
+            if x not in self.rules.dead_letters and i < 6
+        }
+        for word in self.constants.possibles:
             letters_in_set = sum([1 for c in letter_set if c in word])
             if letters_in_set > most_letters_from_set:
                 most_letters_from_set = letters_in_set

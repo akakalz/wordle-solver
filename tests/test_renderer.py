@@ -10,36 +10,44 @@ import pytest
 
 
 @pytest.mark.parametrize(
-    "letter,in_answer,in_loc",
+    "letter,in_answer,in_loc,many,count_in",
     [
-        ("a", True, True),
-        ("a", False, True),
-        ("a", True, False),
-        ("a", False, False),
+        ("a", True, True, False, 1),
+        ("a", False, True, False, 0),
+        ("a", True, False, False, 1),
+        ("a", False, False, False, 0),
     ]
 )
-def test_comparison(letter, in_answer, in_loc):
+def test_comparison(letter, in_answer, in_loc, many, count_in):
     # arrange
     # act
-    actual = Comparison(letter=letter, letter_in_answer=in_answer, letter_in_correct_location=in_loc)
+    actual = Comparison(
+        letter=letter,
+        letter_in_answer=in_answer,
+        letter_in_correct_location=in_loc,
+        one_of_many=many,
+        count_in_answer=count_in,
+    )
     # assert
     assert actual.letter == letter
     assert actual.letter_in_answer == in_answer
     assert actual.letter_in_correct_location == in_loc
+    assert actual.one_of_many == many
+    assert actual.count_in_answer == count_in
 
 
 @pytest.mark.parametrize(
     "word,answer,expected",
     [
-        ("toner","today", {0: Comparison("t", True, True), 1: Comparison("o", True, True),
-                            2: Comparison("n", False, False), 3: Comparison("e", False, False),
-                            4: Comparison("r", False, False)}),
-        ("today","today", {0: Comparison("t", True, True), 1: Comparison("o", True, True),
-                            2: Comparison("d", True, True), 3: Comparison("a", True, True),
-                            4: Comparison("y", True, True)}),
-        ("sonar","today", {0: Comparison("s", False, False), 1: Comparison("o", True, True),
-                            2: Comparison("n", False, False), 3: Comparison("a", True, True),
-                            4: Comparison("r", False, False)}),
+        ("toner","today", {0: Comparison("t", True, True, False, 1), 1: Comparison("o", True, True, False, 1),
+                            2: Comparison("n", False, False, False, 0), 3: Comparison("e", False, False, False, 0),
+                            4: Comparison("r", False, False, False, 0)}),
+        ("today","today", {0: Comparison("t", True, True, False, 1), 1: Comparison("o", True, True, False, 1),
+                            2: Comparison("d", True, True, False, 1), 3: Comparison("a", True, True, False, 1),
+                            4: Comparison("y", True, True, False, 1)}),
+        ("sonar","today", {0: Comparison("s", False, False, False, 0), 1: Comparison("o", True, True, False, 1),
+                            2: Comparison("n", False, False, False, 0), 3: Comparison("a", True, True, False, 1),
+                            4: Comparison("r", False, False, False, 0)}),
     ]
 )
 def test_word_compare(word, answer, expected):

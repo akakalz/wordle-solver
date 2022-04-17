@@ -1,6 +1,10 @@
 from answers import ANSWERS
 from constants import ALPHA, Constants
 from collections import Counter
+
+# from shrewd_guesser import ShrewdGuesser
+# from regex_generator import Rules
+
 import json
 
 
@@ -107,13 +111,17 @@ def main() -> None:
 
 def main_2():
     c = Constants()
-    # for k, v in c.answers.items():
-    #     if v == "store":
-    #         print(v, k)
-    #         break
     for k, v in c.answers.items():
-        if k < str(c.today):
+        if v == "harry":
             print(v, k)
+            break
+    # for k, v in c.answers.items():
+    #     if k < str(c.today):
+    #         print(v, k)
+    # r = Rules()
+    # sg = ShrewdGuesser(r, c, [])
+    # print(sg.get_potential_answer_with_most_letters_from_set())
+
 
 
 if __name__ == "__main__":

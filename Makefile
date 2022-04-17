@@ -5,15 +5,15 @@ clean:
 		-o -name '*.pyc' -delete -print
 
 build:
-	docker build --target builder -t src_container .
+	docker build --target builder -t wordle_solver .
 
 build-test:
-	docker build --target tester -t src_test .
+	docker build --target tester -t wordle_solver_test .
 
 test: build-test
 	docker rm -f src_test || echo "container removed"
-	docker run --name src_test src_test
+	docker run --rm --name wordle_solver_test wordle_solver_test
 	docker rm -f src_test || echo "container removed"
 
 run: build
-	docker run src_container
+	docker run --rm --name wordle_solver wordle_solver

@@ -9,16 +9,17 @@ class SuperSimilar:
         self.words = words
 
         self.counts = self.get_letter_counts()
-        self.two_thirds = 0.666667 * len(self.words)
+        self.two_thirds = 0.66 * len(self.words)
         self._recommendations: set = None
 
     def has_super_similar(self) -> bool:
         if len(self.words) < 3:
+            # if there's only 1 or 2 words left, the rest doesn't make sense to run
             return False
         return self.count_similarities() and self.letter_position_similarities()
 
     def letter_position_similarities(self) -> bool:
-        candidates = sorted(self.counts, key=lambda x: self.counts[x], reverse=True)[:4]
+        candidates = sorted(self.counts, key=lambda x: self.counts[x], reverse=True)[:3]
         pos = {x: [] for x in candidates}
         for word in self.words:
             for letter in pos:
@@ -38,7 +39,7 @@ class SuperSimilar:
 
     def count_similarities(self) -> bool:
         sims = len([k for k, v in self.counts.items() if self.two_thirds <= v])
-        if sims >= 4:
+        if sims >= 3:
             return True
         return False
 

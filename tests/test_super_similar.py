@@ -1,4 +1,4 @@
-from research.super_similar_words import SuperSimilar
+from super_similar_words import SuperSimilar
 import pytest
 
 

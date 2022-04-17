@@ -9,9 +9,8 @@ from valids import VALIDS
 MAX_GUESSES = 6
 
 STARTING_DATE = date(2021, 6, 19)  # date wordle started
-TODAY = date.today() + timedelta(days=1)
-# `harry` day was skipped, so adding a day
-TODAY = date(2022, 3, 26)
+TODAY = date.today()
+# TODAY = date(2022, 1, 4)
 ALPHA = {
     "a",
     "b",
