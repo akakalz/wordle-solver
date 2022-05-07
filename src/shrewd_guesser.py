@@ -29,7 +29,6 @@ class ShrewdGuesser(Guesser):
             print(self.possibles)
         else:
             print(f"{len(self.possibles)} possible words")
-        print(rules)
 
     def guess(self) -> str:
         action = self.determine_course_of_action()
@@ -76,7 +75,7 @@ class ShrewdGuesser(Guesser):
                 if word in self.prior_guesses:
                     continue
                 for letter in rules.preferred_letters:
-                    if letter in word:
+                    if letter in word and all([x not in word for x in rules.dead_letters]):
                         possibles.add(word)
                         break
         else:

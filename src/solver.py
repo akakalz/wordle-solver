@@ -35,7 +35,7 @@ class Solver:
         return len(self.guesses) if self.is_solved() else 10
 
     def _make_guess(self, word: str) -> None:
-        print(f"guessing {word}")
+        print(f"guessing {word} <-----------------")
         # logger.opt(colors=True).info(f"guessing <green>{word}</green>")
         guess = WordleCompare(word, self._answer)
         self.guesses.append(guess)
